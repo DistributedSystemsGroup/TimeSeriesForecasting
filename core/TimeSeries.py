@@ -12,3 +12,6 @@ class TimeSeries:
 
     def get_forecasting_window(self) -> int:
         return self.forecasting_window
+
+    def get_minimum_observations(self) -> int:
+        return self.minimum_observations

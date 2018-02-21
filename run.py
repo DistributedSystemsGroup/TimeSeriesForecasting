@@ -11,10 +11,11 @@ from core.TimeSeries import TimeSeries
 from forecasting_models.DummyPrevious import DummyPrevious
 
 
-if __name__ == '__main__':
-    def run_experiment(exp: Experiment):
-        exp.run()
+def run_experiment(exp: Experiment):
+    exp.run()
 
+
+if __name__ == '__main__':
     def set_csv_field_size_limit():
         max_int = sys.maxsize
 

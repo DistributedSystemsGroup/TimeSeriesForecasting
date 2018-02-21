@@ -30,6 +30,8 @@ class Experiment:
             csv_writer.writeheader()
 
             for ts in self.time_series:
+                self.model.reset()
+
                 w = ts.forecasting_window
                 i = ts.minimum_observations
 
