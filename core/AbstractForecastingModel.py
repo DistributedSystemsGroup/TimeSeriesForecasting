@@ -13,6 +13,9 @@ class AbstractForecastingModel(ABC):
     def add_observations(self, values: List[float]):
         self.time_series_values = np.concatenate((self.time_series_values, values), axis=0)
 
+    def add_observation(self, value: float):
+        self.time_series_values.append(value)
+
     def get_observations(self) -> List[float]:
         return self.time_series_values
 

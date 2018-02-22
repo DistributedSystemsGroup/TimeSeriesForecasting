@@ -8,6 +8,7 @@ import os
 
 from core.Experiment import Experiment
 from core.TimeSeries import TimeSeries
+from forecasting_models.Arima import Arima
 from forecasting_models.DummyPrevious import DummyPrevious
 
 
@@ -33,11 +34,14 @@ if __name__ == '__main__':
 
 
     number_of_processes = 1
+    input_filename = "M3C.csv"
+    # input_filename = "google-tss_1.csv"
+    input_file_path = os.path.join("traces", input_filename)
 
     set_csv_field_size_limit()
 
     tss = []
-    with open(os.path.join("traces", "google-tss_10.csv")) as csvfile:
+    with open(input_file_path) as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             ts = None
@@ -58,9 +62,10 @@ if __name__ == '__main__':
             tss.append(ts)
 
     if len(tss) > 0:
-        model_to_use = DummyPrevious()
-
-        experiments = [Experiment(model_to_use, tss)]
+        experiments = [
+            # Experiment(input_filename, DummyPrevious(), tss),
+            Experiment(input_file_path, Arima(), tss)
+        ]
 
         with Pool(processes=number_of_processes) as p:
             p.map(run_experiment, experiments)
