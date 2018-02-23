@@ -43,28 +43,18 @@ if __name__ == '__main__':
     tss = []
     with open(input_file_path) as csvfile:
         reader = csv.DictReader(csvfile)
-        for row in reader:
-            ts = None
-            # FIXME: Very ugly, let's think at a better way create a new TimeSeries object
-            if "values" in row:
-                values = [float(x) for x in row["values"].split(" ")]
-                if "forecasting_window" in row:
-                    if "minimum_observations" in row:
-                        ts = TimeSeries(values, int(row["forecasting_window"]), int(row["minimum_observations"]))
-                    else:
-                        ts = TimeSeries(values, int(row["forecasting_window"]))
-                else:
-                    ts = TimeSeries(values)
-            else:
-                RuntimeError("No columns named 'values' inside the provided csv!")
-                sys.exit(-1)
+        if "values" not in reader.fieldnames:
+            RuntimeError("No columns named 'values' inside the provided csv!")
+            sys.exit(-1)
 
-            tss.append(ts)
+        for row in reader:
+            observations = [float(x) for x in row.pop("values").split(" ")]
+            tss.append(TimeSeries(observations, **row))
 
     if len(tss) > 0:
         experiments = [
-            # Experiment(input_filename, DummyPrevious(), tss),
-            Experiment(input_file_path, Arima(), tss)
+            Experiment(DummyPrevious(), tss),
+            # Experiment(input_file_path, Arima(), tss)
         ]
 
         with Pool(processes=number_of_processes) as p:
