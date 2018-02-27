@@ -37,11 +37,56 @@ class TimeSeries:
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-    def to_csv(self) -> Dict:
+    def __type_checks__(self):
         assert isinstance(self.predictions, List[Prediction]), "prediction attribute must be of type List[Prediction]"
+
+    def __length_checks__(self):
+        assert len(self.observations) == len(self.predictions), \
+            "The number of observations ({}) and predictions ({}) do not match.".format(
+                len(self.observations), len(self.predictions))
+
+    def to_csv(self) -> Dict:
+        self.__type_checks__()
+        self.__length_checks__()
+
         return {
             "observations": " ".join(str(x) for x in self.observations),
             "predicted_values": " ".join(str(x.value) for x in self.predictions),
             "predicted_stddev": " ".join(str(x.stddev) for x in self.predictions),
             **{key: self.__getattribute__(key) for key in self.__dict__.keys() - {"observations", "predictions"}}
         }
+
+    def estimation_errors(self) -> List:
+        self.__type_checks__()
+        self.__length_checks__()
+
+        return [float(self.predictions[i].value - self.observations[i])
+                for i in np.arange(self.minimum_observations, len(self.observations))]
+
+    def estimation_errors_area(self) -> float:
+        return np.asscalar(np.sum(self.estimation_errors()))
+
+    def under_estimation_errors(self) -> List:
+        return [float(x) for x in self.estimation_errors() if x < 0]
+
+    def under_estimation_errors_area(self) -> float:
+        return np.asscalar(np.sum(self.under_estimation_errors()))
+
+    def over_estimation_errors(self) -> List:
+        return [float(x) for x in self.estimation_errors() if x > 0]
+
+    def over_estimation_errors_area(self) -> float:
+        return np.asscalar(np.sum(self.over_estimation_errors()))
+
+    def estimation_percentage_errors(self) -> List:
+        self.__type_checks__()
+        self.__length_checks__()
+
+        return [float(np.abs(1 - self.predictions[i].value / self.observations[i]) * 100)
+                for i in np.arange(self.minimum_observations, len(self.observations))]
+
+    def rmse(self) -> float:
+        return np.sqrt(np.mean([np.power(x, 2) for x in self.estimation_errors()]))
+
+    def has_one_under_estimation_error(self) -> bool:
+        return len(self.under_estimation_errors()) > 0
