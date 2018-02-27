@@ -40,6 +40,8 @@ class Experiment:
     def run(self):
         with open(self.experiment_result_file_path, "w", newline='') as csv_file:
             for ts in self.time_series:
+                assert len(ts.predictions) == 0, \
+                    "There are already some predictions ({}) inside this TimeSeries object.".format(len(ts.predictions))
                 self.model.reset()
 
                 i = 0
