@@ -46,10 +46,7 @@ if __name__ == '__main__':
         if "values" not in reader.fieldnames:
             RuntimeError("No columns named 'values' inside the provided csv!")
             sys.exit(-1)
-
-        for row in reader:
-            observations = [float(x) for x in row.pop("values").split(" ")]
-            tss.append(TimeSeries(observations, **row))
+        tss.extend([TimeSeries(observations=[float(x) for x in row.pop("values").split(" ")], **row) for row in reader])
 
     if len(tss) > 0:
         experiments = [
