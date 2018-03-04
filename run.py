@@ -10,6 +10,14 @@ from core.Experiment import Experiment
 from core.TimeSeries import TimeSeries
 from forecasting_models.Arima import Arima
 from forecasting_models.DummyPrevious import DummyPrevious
+from forecasting_models.ExpSmoothing_NoTrend import ExpSmoothing_NoTrend
+from forecasting_models.ExpSmoothing_Trend import ExpSmoothing_Trend
+from forecasting_models.Svr_Recursive import Svr_Recursive
+from forecasting_models.Svr_Directive import Svr_Directive
+from forecasting_models.RandomForest_Recursive import RandomForest_Recursive
+from forecasting_models.RandomForest_Directive import RandomForest_Directive
+from forecasting_models.GradientBoosting_Recursive import GradientBoosting_Recursive
+from forecasting_models.GradientBoosting_Directive import GradientBoosting_Directive
 
 
 def run_experiment(exp: Experiment):
@@ -51,7 +59,15 @@ if __name__ == '__main__':
     if len(tss) > 0:
         experiments = [
             Experiment(DummyPrevious(), tss),
-            # Experiment(input_file_path, Arima(), tss)
+            #Experiment(input_file_path, Arima(), tss)
+            #Experiment(ExpSmoothing_NoTrend(), tss)
+            #Experiment(ExpSmoothing_Trend(), tss)
+            #Experiment(Svr_Recursive(), tss)
+            #Experiment(Svr_Directive(), tss)
+            #Experiment(RandomForest_Recursive(), tss)
+            #Experiment(RandomForest_Directive(), tss)
+            #Experiment(GradientBoosting_Recursive(), tss)
+            #Experiment(GradientBoosting_Directive(), tss)
         ]
 
         with Pool(processes=number_of_processes) as p:
