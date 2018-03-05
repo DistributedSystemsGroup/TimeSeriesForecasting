@@ -1,6 +1,7 @@
 import argparse
 import csv
 import logging
+import logging.config
 import os
 
 import matplotlib.pyplot as plt
@@ -67,7 +68,7 @@ class Metrics:
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO)
+    logging.config.fileConfig(os.path.join("logging.conf"))
     logger = logging.getLogger(__name__)
 
     parser = argparse.ArgumentParser(description="Experiment results parser.")
@@ -83,7 +84,7 @@ if __name__ == '__main__':
         logging.info("Parsing file for model: {}".format(model_name))
 
         all_tss[model_name] = []
-        with open(os.path.join(exp_folder, filename), "r") as results_csvfile:
+        with open(os.path.join(exp_folder, filename)) as results_csvfile:
             csv_reader = csv.DictReader(results_csvfile)
             for row in csv_reader:
                 all_tss[model_name].append(TimeSeries(**row))

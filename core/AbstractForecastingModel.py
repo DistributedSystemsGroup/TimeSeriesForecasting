@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Type
 
 import numpy as np
 
@@ -11,7 +11,7 @@ class AbstractForecastingModel(ABC):
         self.time_series_values = []
 
     def add_observations(self, values: List[float]):
-        self.time_series_values = np.concatenate((self.time_series_values, values), axis=0)
+        self.time_series_values = np.concatenate((self.time_series_values, values))
 
     def add_observation(self, value: float):
         self.time_series_values.append(value)
@@ -25,10 +25,10 @@ class AbstractForecastingModel(ABC):
     @property
     @abstractmethod
     def name(self) -> str:
-        pass
+        raise NotImplementedError
 
     @abstractmethod
-    def predict(self, future_points: int = 1) ->List[Prediction]:
-        pass
+    def predict(self, future_points: int = 1) -> List[Prediction]:
+        raise NotImplementedError
 
 

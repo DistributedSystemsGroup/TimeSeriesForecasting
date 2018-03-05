@@ -1,16 +1,14 @@
 import csv
+import logging
 from datetime import datetime
 from typing import List
 
-import numpy as np
-
 import os
-
-from shutil import copyfile
 
 from core.AbstractForecastingModel import AbstractForecastingModel
 from core.Prediction import Prediction
 from core.TimeSeries import TimeSeries
+from utils.MultiProcessLogger import MultiProcessLogger
 
 date_format = "%Y-%m-%d-%H-%M-%S"
 EXPERIMENTS_FOLDER_NAME = "experiment_results"
@@ -18,7 +16,7 @@ EXPERIMENTS_FOLDER_NAME = "experiment_results"
 
 class Experiment:
 
-    def __init__(self, model: AbstractForecastingModel, time_series: List[TimeSeries], ):
+    def __init__(self, model: AbstractForecastingModel, time_series: List[TimeSeries]):
         self.model = model
         self.time_series = time_series
         self.csv_writer = None
@@ -37,12 +35,17 @@ class Experiment:
             self.csv_writer.writeheader()
         self.csv_writer.writerow(row_to_write)
 
-    def run(self):
+    def run(self, mp_logger: MultiProcessLogger):
+        mp_logger.add_logger()
+        logger = MultiProcessLogger.logger(self.model.name)
+
+        logger.info("Experiment Started.")
         with open(self.experiment_result_file_path, "w", newline='') as csv_file:
             for ts in self.time_series:
+                self.model.reset()
+                ts.reset()
                 assert len(ts.predictions) == 0, \
                     "There are already some predictions ({}) inside this TimeSeries object.".format(len(ts.predictions))
-                self.model.reset()
 
                 i = 0
                 while i < ts.minimum_observations:
@@ -64,3 +67,4 @@ class Experiment:
                     i += 1
 
                 self.__dump_result_on_csv__(csv_file, ts.to_csv())
+        logger.info("Experiment Finished.")
