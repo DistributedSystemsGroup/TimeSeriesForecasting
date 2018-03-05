@@ -11,6 +11,9 @@ class TimeSeries:
         self.predictions = []  # List[Prediction]
         self.__parse_kwargs__(**kwargs)
 
+    def reset(self):
+        self.predictions = []
+
     def __parse_kwargs__(self, **kwargs):
         def __extract_values__(values):
             if isinstance(values, str):
@@ -38,7 +41,10 @@ class TimeSeries:
             setattr(self, key, value)
 
     def __type_checks__(self):
-        assert isinstance(self.predictions, List[Prediction]), "prediction attribute must be of type List[Prediction]"
+        # Broken with Python3.6, Works with Python3.7
+        # assert isinstance(self.predictions, List[Prediction]), \
+        #     "prediction attribute must be of type List[Prediction]"
+        pass
 
     def __length_checks__(self):
         assert len(self.observations) == len(self.predictions), \
