@@ -8,23 +8,23 @@ from core.Prediction import Prediction
 alpha = 0.9
 gamma = 0.9
 
-class ExpSmoothing_Trend(AbstractForecastingModel):
+
+class ExpSmoothingTrend(AbstractForecastingModel):
     @property
     def name(self) -> str:
-        return "ExpSmoothing_Trend"
+        return "ExpSmoothingTrend"
 
     def predict(self, future_points: int = 1) -> List[Prediction]:
 
-    # Error correction form
-
-        # Inizialization:
+        # Error correction form
+        # Initialization:
         results = [self.time_series_values[0]]
         level = self.time_series_values[0]
         trend = self.time_series_values[1] - self.time_series_values[0]
-
-        for i in range(1, len(self.time_series_values)+future_points):
+        error = 0
+        for i in range(1, len(self.time_series_values) + future_points):
             if i < len(self.time_series_values):
-                error = self.time_series_values[i-1] - results[i-1]
+                error = self.time_series_values[i - 1] - results[i - 1]
             level = level + trend + alpha * error
             trend = trend + alpha * gamma * error
             results.append(level + trend)
@@ -32,7 +32,6 @@ class ExpSmoothing_Trend(AbstractForecastingModel):
         predictions = results[len(self.time_series_values):]
 
         return [Prediction(predictions[i]) for i in np.arange(len(predictions))]
-
 
     # def predict(self, future_points: int = 1, observations=[]) -> List[Prediction]:
     #
@@ -55,4 +54,3 @@ class ExpSmoothing_Trend(AbstractForecastingModel):
     #     predictions = result[len(self.time_series_values):]
     #
     #     return [Prediction(predictions[i]) for i in np.arange(len(predictions))]
-
