@@ -37,6 +37,7 @@ class Metrics:
             "over_estimation_errors_area": [ts.over_estimation_errors_area() for ts in tss],
             "estimation_percentage_errors": [ts.estimation_percentage_errors() for ts in tss],
             "root_mean_squared_error": [ts.rmse() for ts in tss],
+            "mean_absolute_percentage_error": [ts.mape() for ts in tss],
             "with_at_least_one_under_estimation_error": np.sum(
                 np.multiply([ts.has_one_under_estimation_error() for ts in tss], 1))
         }
