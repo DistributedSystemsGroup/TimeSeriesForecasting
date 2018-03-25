@@ -4,7 +4,9 @@ import logging
 import logging.config
 import os
 
-import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pylab as plt
 from typing import Dict, List
 
 import numpy as np
@@ -66,6 +68,29 @@ class Metrics:
                              .format(model, str(metric).replace("_", " ").title(), np.mean(values),
                                      np.median(values), np.max(values), np.min(values), values.size,
                                      model_width=max_model_width, metric_width=max_metric_width))
+    @staticmethod
+    def plot_mape(metrics):
+
+        plot_dict = {}
+
+        for model in sorted(metrics.keys()):
+            plot_dict[model] = np.mean(metrics[model]["mean_absolute_percentage_error"])
+
+        fig = plt.figure()
+
+        x_axes = np.arange(len(plot_dict))
+        plt.scatter(x_axes, plot_dict.values(), marker='o', color="red")
+
+        plt.xticks(x_axes, plot_dict.keys(), fontsize=11)
+        plt.yticks(fontsize=11)
+        plt.title("Comparison of different forecasting models", fontweight='bold')
+        plt.xlabel("Model", style='italic', fontsize=14)
+        plt.ylabel("Average MAPE", style='italic', fontsize=14)
+        fig.autofmt_xdate()
+        plt.tight_layout()
+
+        fig.savefig('mape_comparison.png')
+        fig.show()
 
 
 if __name__ == '__main__':
@@ -97,3 +122,4 @@ if __name__ == '__main__':
     logging.info("Done.")
 
     Metrics.print(all_metrics)
+    Metrics.plot_mape(all_metrics)
