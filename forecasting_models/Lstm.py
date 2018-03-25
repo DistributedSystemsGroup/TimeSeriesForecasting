@@ -2,29 +2,37 @@ from typing import List
 
 import numpy as np
 import more_itertools
+from sklearn.preprocessing import StandardScaler
 import tensorflow as tf
 from tensorflow.contrib import rnn
 
 from core.AbstractForecastingModel import AbstractForecastingModel
 from core.Prediction import Prediction
 
-n_hidden = 200
-n_layers = 2
+n_hidden = 40
+n_layers = 1
 training_iters = 150
 learning_rate = 0.001
 num_features = 1
-train_window = 3
+train_window = 2
+
+tf.set_random_seed(1234)
 
 class Lstm(AbstractForecastingModel):
+
     @property
     def name(self) -> str:
         return "Lstm"
 
     def build_train_test(self):
 
-        train_X = np.array(list(more_itertools.windowed(self.time_series_values[0:-1], n=train_window)))
-        train_Y = np.reshape(self.time_series_values[train_window:], (-1, 1))
-        test_X = np.reshape(self.time_series_values[len(self.time_series_values)-train_window:],(1,-1))
+        self.scaler = StandardScaler()
+        self.scaler.fit(np.reshape(self.time_series_values, (-1,1)))
+        scaled_series = self.scaler.transform(np.reshape(self.time_series_values, (-1,1)))
+
+        train_X = np.array(list(more_itertools.windowed(scaled_series[0:-1], n=train_window)))
+        train_Y = np.reshape(scaled_series[train_window:], (-1, 1))
+        test_X = np.reshape(scaled_series[len(scaled_series)-train_window:],(1,-1))
 
         return train_X, train_Y, test_X
 
@@ -70,12 +78,14 @@ class Lstm(AbstractForecastingModel):
             sess.run(init)
 
             for i in range(training_iters):
-                sess.run(train_op, feed_dict={X: np.expand_dims(train_X,axis=2), y: train_Y})
+                sess.run(train_op, feed_dict={X: train_X, y: train_Y})
 
             for k in range(future_points):
 
                 test_X = np.expand_dims(test_X, axis=2)
                 result = sess.run(rnn_output, feed_dict={X: test_X})
+                result = self.scaler.inverse_transform(result)
+
                 predictions.append(result[0][0])
 
                 self.add_observation(result)
