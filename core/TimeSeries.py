@@ -69,6 +69,13 @@ class TimeSeries:
         return [float(self.predictions[i].value - self.observations[i])
                 for i in np.arange(self.minimum_observations, len(self.observations))]
 
+    def relative_estimation_errors(self) -> List:
+        self.__type_checks__()
+        self.__length_checks__()
+
+        return [float((self.predictions[i].value - self.observations[i])/self.observations[i])
+                for i in np.arange(self.minimum_observations, len(self.observations))]
+
     def estimation_errors_area(self) -> float:
         return np.asscalar(np.sum(self.estimation_errors()))
 
@@ -93,6 +100,9 @@ class TimeSeries:
 
     def rmse(self) -> float:
         return np.sqrt(np.mean([np.power(x, 2) for x in self.estimation_errors()]))
+
+    def mape(self) -> float:
+        return np.mean([np.abs(x) for x in self.relative_estimation_errors()]) * 100
 
     def has_one_under_estimation_error(self) -> bool:
         return len(self.under_estimation_errors()) > 0

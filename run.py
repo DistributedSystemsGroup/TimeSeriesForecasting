@@ -12,8 +12,7 @@ from core.Experiment import Experiment
 from core.TimeSeries import TimeSeries
 from forecasting_models.Arima import Arima
 from forecasting_models.DummyPrevious import DummyPrevious
-from forecasting_models.ExpSmoothingNoTrend import ExpSmoothingNoTrend
-from forecasting_models.ExpSmoothingTrend import ExpSmoothingTrend
+from forecasting_models.ExpSmoothing import ExpSmoothing
 from forecasting_models.GradientBoostingDirective import GradientBoostingDirective
 from forecasting_models.GradientBoostingRecursive import GradientBoostingRecursive
 from forecasting_models.RandomForestDirective import RandomForestDirective
@@ -74,8 +73,7 @@ if __name__ == '__main__':
         models_to_test = [
             DummyPrevious(),
             Arima(),
-            ExpSmoothingNoTrend(),
-            ExpSmoothingTrend(),
+            ExpSmoothing(),
             SvrRecursive(),
             SvrDirective(),
             RandomForestRecursive(),
