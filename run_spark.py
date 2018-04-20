@@ -1,0 +1,111 @@
+import csv
+import argparse
+from datetime import datetime
+
+import sys
+from pyspark import SparkContext
+
+import os
+
+import logging.config
+
+from core.TimeSeries import TimeSeries
+from core.Experiment import Experiment
+
+from forecasting_models.DummyPrevious import DummyPrevious
+from forecasting_models.AutoArima import Arima
+from forecasting_models.ExpSmoothing import ExpSmoothing
+from forecasting_models.GradientBoostingDirective import GradientBoostingDirective
+from forecasting_models.GradientBoostingRecursive import GradientBoostingRecursive
+from forecasting_models.RandomForestDirective import RandomForestDirective
+from forecasting_models.RandomForestRecursive import RandomForestRecursive
+from forecasting_models.SvrDirective import SvrDirective
+from forecasting_models.SvrRecursive import SvrRecursive
+
+
+def set_csv_field_size_limit():
+    max_int = sys.maxsize
+
+    decrement = True
+    while decrement:
+        # decrease the maxInt value by factor 10
+        # as long as the OverflowError occurs.
+        decrement = False
+        try:
+            csv.field_size_limit(max_int)
+        except OverflowError:
+            max_int = int(max_int / 10)
+            decrement = True
+
+
+def run_experiment(_v):
+    return _v[1].name, Experiment(model=_v[1], time_series=[_v[0]], csv_writing=False).run()
+
+
+if __name__ == '__main__':
+    logging.config.fileConfig(os.path.join("logging.conf"))
+    logger = logging.getLogger(__name__)
+
+    parser = argparse.ArgumentParser(description="Experiment different TimeSeries Forecasting Models.")
+    parser.add_argument(action='store', dest='input_trace_file', help='Input Trace File')
+    parser.add_argument("-p", "--parallelism", type=int, default=1,
+                        action='store', dest='parallelism', help='Parallelism')
+    args = parser.parse_args()
+
+    input_file_path = os.path.abspath(args.input_trace_file)
+
+    set_csv_field_size_limit()
+
+    logger.info("Loading file: {}".format(input_file_path))
+    tss = []
+    with open(input_file_path) as csvfile:
+        reader = csv.DictReader(csvfile)
+        if "values" not in reader.fieldnames:
+            RuntimeError("No columns named 'values' inside the provided csv!")
+            sys.exit(-1)
+        tss.extend([TimeSeries(observations=[float(x) for x in row.pop("values").split(" ")], **row) for row in reader])
+    logger.info("Loaded {} TimeSeries".format(len(tss)))
+
+    if len(tss) > 0:
+        models_to_test = [
+            DummyPrevious(),
+            Arima(),
+            ExpSmoothing(),
+            SvrRecursive(),
+            SvrDirective(),
+            RandomForestRecursive(),
+            RandomForestDirective(),
+            GradientBoostingRecursive(),
+            GradientBoostingDirective(),
+        ]
+
+        sc = SparkContext(appName="TimeSeriesForecasting")
+        tss_rdd = sc.parallelize(tss, 4)
+        models_rdd = sc.parallelize(models_to_test, len(models_to_test))
+        # tss_rdd = sc.parallelize(list(range(100)), 1)
+
+        logger.info("Partitions -> Models: {} TSS: {}".format(models_rdd.getNumPartitions(), tss_rdd.getNumPartitions()))
+
+        res_rdd = tss_rdd.cartesian(models_rdd).map(run_experiment).groupByKey().zipWithIndex().cache()
+        for i in range(res_rdd.count()):
+            ((model_name, _tss), _) = res_rdd.filter(lambda x: x[1] == i).collect()[0]
+
+            csv_writer = None
+            date_format = "%Y-%m-%d-%H-%M-%S"
+            experiment_directory_path = os.path.join("experiment_results", datetime.now().strftime(date_format))
+            if not os.path.exists(experiment_directory_path):
+                os.makedirs(experiment_directory_path)
+
+            file_path = os.path.join(experiment_directory_path, "predicted_{}.csv".format(model_name))
+            with open(file_path, "w", newline='') as csv_file:
+                for _v in _tss:
+                    row_to_write = _v[0].to_csv()
+                    if csv_writer is None:
+                        csv_writer = csv.DictWriter(csv_file, fieldnames=row_to_write.keys(),
+                                                    delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+                        csv_writer.writeheader()
+                    csv_writer.writerow(row_to_write)
+
+        logger.info("All Experiments finished.")
+    else:
+        logger.warning("No Time Series to process.")
