@@ -13,7 +13,8 @@ from core.TimeSeries import TimeSeries
 from core.Experiment import Experiment
 
 from forecasting_models.DummyPrevious import DummyPrevious
-from forecasting_models.AutoArima import Arima
+from forecasting_models.Arima import Arima
+from forecasting_models.AutoArima import AutoArima
 from forecasting_models.ExpSmoothing import ExpSmoothing
 from forecasting_models.GradientBoostingDirective import GradientBoostingDirective
 from forecasting_models.GradientBoostingRecursive import GradientBoostingRecursive
@@ -21,21 +22,6 @@ from forecasting_models.RandomForestDirective import RandomForestDirective
 from forecasting_models.RandomForestRecursive import RandomForestRecursive
 from forecasting_models.SvrDirective import SvrDirective
 from forecasting_models.SvrRecursive import SvrRecursive
-
-
-def set_csv_field_size_limit():
-    max_int = sys.maxsize
-
-    decrement = True
-    while decrement:
-        # decrease the maxInt value by factor 10
-        # as long as the OverflowError occurs.
-        decrement = False
-        try:
-            csv.field_size_limit(max_int)
-        except OverflowError:
-            max_int = int(max_int / 10)
-            decrement = True
 
 
 def run_experiment(_v):
