@@ -5,6 +5,9 @@ import logging.config
 import os
 
 import matplotlib
+
+from utils.utils import set_csv_field_size_limit
+
 matplotlib.use('Agg')
 import matplotlib.pylab as plt
 from typing import Dict, List
@@ -32,12 +35,13 @@ class Metrics:
     def calculate(tss: List[TimeSeries]) -> Dict:
         return {
             "estimation_errors": [ts.estimation_errors() for ts in tss],
+            "relative_estimation_errors": [ts.relative_estimation_errors() for ts in tss],
             "under_estimation_errors": [ts.under_estimation_errors() for ts in tss],
             "over_estimation_errors": [ts.over_estimation_errors() for ts in tss],
             "estimation_errors_area": [ts.estimation_errors_area() for ts in tss],
             "under_estimation_errors_area": [ts.under_estimation_errors_area() for ts in tss],
             "over_estimation_errors_area": [ts.over_estimation_errors_area() for ts in tss],
-            "estimation_percentage_errors": [ts.estimation_percentage_errors() for ts in tss],
+            "estimation_percentage_errors": [ts.absolute_percentage_errors() for ts in tss],
             "root_mean_squared_error": [ts.rmse() for ts in tss],
             "mean_absolute_percentage_error": [ts.mape() for ts in tss],
             "with_at_least_one_under_estimation_error": np.sum(
@@ -63,11 +67,17 @@ class Metrics:
                     _values = metrics[model][metric]
 
                 values = np.array(_values, dtype=np.float64)
-                logging.info("[{:^{model_width}}][{:^{metric_width}}] "
-                             "Mean: {: 10.2f} Median: {: 10.2f} Max: {: 10.2f} Min: {: 10.2f} Size: {}"
-                             .format(model, str(metric).replace("_", " ").title(), np.mean(values),
-                                     np.median(values), np.max(values), np.min(values), values.size,
-                                     model_width=max_model_width, metric_width=max_metric_width))
+                if values.size == 0:
+                    logging.info("[{:^{model_width}}][{:^{metric_width}}] "
+                                 .format(model, str(metric).replace("_", " ").title(),
+                                         model_width=max_model_width, metric_width=max_metric_width))
+                else:
+                    logging.info("[{:^{model_width}}][{:^{metric_width}}] "
+                                 "Mean: {:15.2f} Median: {:15.2f} Max: {:15.2f} Min: {:15.2f} Size: {}"
+                                 .format(model, str(metric).replace("_", " ").title(), np.mean(values),
+                                         np.median(values), np.max(values), np.min(values), values.size,
+                                         model_width=max_model_width, metric_width=max_metric_width, value_width=20))
+
     @staticmethod
     def plot_mape(metrics):
 
@@ -101,6 +111,8 @@ if __name__ == '__main__':
     parser.add_argument(action='store', dest='exp_folder', help='Experiment folder path')
     args = parser.parse_args()
 
+    set_csv_field_size_limit()
+
     all_tss = {}
 
     exp_folder = os.path.abspath(args.exp_folder)
@@ -122,4 +134,4 @@ if __name__ == '__main__':
     logging.info("Done.")
 
     Metrics.print(all_metrics)
-    Metrics.plot_mape(all_metrics)
+    # Metrics.plot_mape(all_metrics)
