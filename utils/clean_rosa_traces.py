@@ -65,6 +65,76 @@ if __name__ == '__main__':
                     "minimum_observations": len(values) - int(row["NF"])
                 })
 
+    def m1(sheet_name: str, type_data: str):
+        filename = "MC1001.xls"
+        output_filename = os.path.splitext(filename)[0] + "_" + type_data[:-2] + ".csv"
+
+        from pandas import read_excel
+        df = read_excel(os.path.join(dirty_traces_folder, filename), sheet_name=sheet_name)
+
+        with open(os.path.join(clean_traces_directory_path, output_filename), "w", newline='') as csvwritefile:
+            fields_names = ["values", "forecasting_window", "minimum_observations"]
+            csv_writer = csv.DictWriter(csvwritefile, fieldnames=fields_names,
+                                        delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+            csv_writer.writeheader()
+
+            for index, row in df.iterrows():
+                if row["Type"].strip() == type_data:
+                    # The first value of the time series starts from column 7
+                    values = row.iloc[7:].dropna(how='all').values.tolist()
+                    csv_writer.writerow({
+                        "values": " ".join(str(v) for v in values),
+                        "forecasting_window": row["NF"],
+                        "minimum_observations": len(values) - int(row["NF"])
+                    })
+
+    def tcomp(sheet_name: str):
+        filename = "MHcomp1.xls"
+        output_filename = os.path.splitext(filename)[0] + "_" + sheet_name[:-2] + ".csv"
+
+        from pandas import read_excel
+        df = read_excel(os.path.join(dirty_traces_folder, filename), sheet_name=sheet_name)
+
+        NF_dict = {"Yearly": 6, "Quarterly": 8, "Monthly": 12, "Weekly": 26, "Daily": 14, "Hourly": 48}
+
+        with open(os.path.join(clean_traces_directory_path, output_filename), "w", newline='') as csvwritefile:
+            fields_names = ["values", "forecasting_window", "minimum_observations"]
+            csv_writer = csv.DictWriter(csvwritefile, fieldnames=fields_names,
+                                        delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+            csv_writer.writeheader()
+
+            for index, column in df.iteritems():
+                if index != "n":
+                    # The first value of the time series starts from row 4
+                    values = column.iloc[3:].dropna(how='all').values.tolist()
+                    csv_writer.writerow({
+                        "values": " ".join(str(v) for v in values),
+                        "forecasting_window": NF_dict[sheet_name],
+                        "minimum_observations": len(values)
+                    })
+
+    def cif():
+        filename = "cif-dataset.csv"
+        output_filename = os.path.splitext(filename)[0] + ".csv"
+
+        with open(os.path.join(dirty_traces_folder, filename)) as csvreadfile:
+            reader = csv.reader(csvreadfile)
+
+            with open(os.path.join(clean_traces_directory_path, output_filename), "w", newline='') as csvwritefile:
+                fields_names = ["values", "forecasting_window", "minimum_observations"]
+                csv_writer = csv.DictWriter(csvwritefile, fieldnames=fields_names,
+                                            delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+                csv_writer.writeheader()
+
+                for row in reader:
+                    _row = row[0].split(";")
+                    values = _row[3:]
+                    csv_writer.writerow({
+                        "values": " ".join(values),
+                        "forecasting_window": int(_row[1]),
+                        "minimum_observations": len(values) - int(_row[1])
+                    })
+
     dirty_traces_folder = os.path.join("..", "traces", "dirty_traces")
     clean_traces_folder = os.path.join("..", "traces")
 
@@ -74,3 +144,6 @@ if __name__ == '__main__':
 
     m4()
     m3("M3Year")
+    m1("MC1001","YEARLY")
+    tcomp("Yearly")
+    cif()
