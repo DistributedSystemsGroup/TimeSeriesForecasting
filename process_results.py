@@ -4,12 +4,11 @@ import logging
 import logging.config
 import os
 
-import matplotlib
-matplotlib.use('Agg')
 import matplotlib.pylab as plt
 from typing import Dict, List
 
 import numpy as np
+import pandas as pd
 
 from core.TimeSeries import TimeSeries
 
@@ -69,19 +68,49 @@ class Metrics:
                                      np.median(values), np.max(values), np.min(values), values.size,
                                      model_width=max_model_width, metric_width=max_metric_width))
     @staticmethod
-    def plot_mape(metrics):
+    def plot_mapeBO(metrics):
 
-        plot_dict = {}
+        list_norm = []
+        list_bo = []
+        list_models = []
 
         for model in sorted(metrics.keys()):
-            plot_dict[model] = np.mean(metrics[model]["mean_absolute_percentage_error"])
+            if model[-2:] == 'BO':
+                list_models.append(model[:-2])
+                list_bo.append(np.mean(metrics[model]["mean_absolute_percentage_error"]))
+            else:
+                list_norm.append(np.mean(metrics[model]["mean_absolute_percentage_error"]))
 
         fig = plt.figure()
 
-        x_axes = np.arange(len(plot_dict))
-        plt.scatter(x_axes, plot_dict.values(), marker='o', color="red")
+        p1, = plt.plot(list_models, list_norm, color="red")
+        p2, = plt.plot(list_models, list_bo, color="blue")
+        plt.xticks(fontsize=11)
+        plt.yticks(fontsize=11)
+        plt.title("Comparison of different forecasting models", fontweight='bold')
+        plt.xlabel("Model", style='italic', fontsize=14)
+        plt.ylabel("Average MAPE", style='italic', fontsize=14)
+        plt.legend([p1,p2],["Without BO","With BO"])
+        fig.autofmt_xdate()
+        plt.tight_layout()
 
-        plt.xticks(x_axes, plot_dict.keys(), fontsize=11)
+        fig.savefig('mape_comparisonBO.png')
+        fig.show()
+
+    @staticmethod
+    def plot_mape(metrics):
+
+        list_mape = []
+        list_models = []
+
+        for model in sorted(metrics.keys()):
+            list_models.append(model)
+            list_mape.append(np.mean(metrics[model]["mean_absolute_percentage_error"]))
+
+        fig = plt.figure()
+
+        plt.scatter(list_models, list_mape, color="red")
+        plt.xticks(fontsize=11)
         plt.yticks(fontsize=11)
         plt.title("Comparison of different forecasting models", fontweight='bold')
         plt.xlabel("Model", style='italic', fontsize=14)
@@ -90,6 +119,47 @@ class Metrics:
         plt.tight_layout()
 
         fig.savefig('mape_comparison.png')
+        fig.show()
+
+    @staticmethod
+    def build_table(metrics):
+
+        list_models = []
+        list_mape = []
+        list_rmse = []
+
+        for model in sorted(metrics.keys()):
+            list_models.append(model)
+            list_mape.append(np.mean(metrics[model]["mean_absolute_percentage_error"]))
+            list_rmse.append(np.mean(metrics[model]["root_mean_squared_error"]))
+
+        dict_table = {"Models": list_models, "MAPE": list_mape, "RMSE": list_rmse}
+        df = pd.DataFrame(dict_table)
+        df.set_index("Models", inplace=True, drop=True)
+        print(df)
+
+    @staticmethod
+    def box_plot(metrics):
+
+        box_list = []
+
+        for model in sorted(metrics.keys()):
+            box_list.append(metrics[model]["mean_absolute_percentage_error"])
+
+        fig = plt.figure()
+
+        x_axes = np.arange(1,len(box_list)+1)
+        plt.boxplot(box_list, 0, '')
+
+        plt.xticks(x_axes, sorted(metrics.keys()), fontsize=11)
+        plt.yticks(fontsize=11)
+        plt.title("Comparison of different forecasting models", fontweight='bold')
+        plt.xlabel("Model", style='italic', fontsize=14)
+        plt.ylabel("MAPE", style='italic', fontsize=14)
+        fig.autofmt_xdate()
+        plt.tight_layout()
+
+        fig.savefig('mape_boxplots.png')
         fig.show()
 
 
@@ -123,3 +193,6 @@ if __name__ == '__main__':
 
     Metrics.print(all_metrics)
     Metrics.plot_mape(all_metrics)
+    #Metrics.plot_mapeBO(all_metrics)
+    Metrics.box_plot(all_metrics)
+    Metrics.build_table(all_metrics)
