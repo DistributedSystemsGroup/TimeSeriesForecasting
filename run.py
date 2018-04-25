@@ -14,12 +14,14 @@ from forecasting_models.Arima import Arima
 from forecasting_models.AutoArima import AutoArima
 from forecasting_models.DummyPrevious import DummyPrevious
 from forecasting_models.ExpSmoothing import ExpSmoothing
-from forecasting_models.GradientBoostingDirective import GradientBoostingDirective
 from forecasting_models.GradientBoostingRecursive import GradientBoostingRecursive
-from forecasting_models.RandomForestDirective import RandomForestDirective
 from forecasting_models.RandomForestRecursive import RandomForestRecursive
-from forecasting_models.SvrDirective import SvrDirective
 from forecasting_models.SvrRecursive import SvrRecursive
+from forecasting_models.Lstm_Keras import Lstm_Keras
+from forecasting_models.NeuralNetwork import NeuralNetwork
+from forecasting_models.GPRegression import GPRegression
+from forecasting_models.Revarb import Revarb
+from forecasting_models.FBProphet import FBProphet
 
 from utils.MultiProcessLogger import MultiProcessLogger
 from utils.utils import set_csv_field_size_limit
@@ -57,16 +59,18 @@ if __name__ == '__main__':
 
     if len(tss) > 0:
         models_to_test = [
-            # DummyPrevious(),
-            # Arima(),
+            DummyPrevious(),
+            Arima(),
             AutoArima(20),
-            # ExpSmoothing(),
-            # SvrRecursive(),
-            # SvrDirective(),
-            # RandomForestRecursive(),
-            # RandomForestDirective(),
-            # GradientBoostingRecursive(),
-            # GradientBoostingDirective(),
+            ExpSmoothing(),
+            SvrRecursive(),
+            RandomForestRecursive(),
+            GradientBoostingRecursive(),
+            Lstm_Keras(),
+            NeuralNetwork(),
+            GPRegression(),
+            Revarb(),
+            FBProphet()
         ]
         logger.info("Launching {} experiments with a parallelism of {}".format(len(models_to_test), args.parallelism))
 
