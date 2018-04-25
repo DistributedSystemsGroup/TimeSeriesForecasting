@@ -65,6 +65,11 @@ class Experiment:
             if logger is not None:
                 logger.debug("  Time-Series of {} observations.".format(len(ts.observations)))
 
+            if len(ts.observations) <= ts.minimum_observations:
+                if logger is not None:
+                    logger.warning("  Time-Series smaller({}) than minimum_observations({}).".format(len(ts.observations), ts.minimum_observations))
+                break
+
             i = 0
             while i < ts.minimum_observations:
                 ts.predictions.append(Prediction(ts.observations[i], 0))
@@ -74,8 +79,8 @@ class Experiment:
             while i < len(ts.observations):
                 value = ts.observations[i]
                 if len(self.model.get_observations()) >= ts.minimum_observations:
-                    if logger is not None:
-                        logger.debug("   Predicting the points from {} to {}.".format(i, i + ts.forecasting_window))
+                    # if logger is not None:
+                    #     logger.debug("   Predicting the points from {} to {}.".format(i, i + ts.forecasting_window))
                     predictions = self.model.predict(ts.forecasting_window)
                     assert ts.forecasting_window == len(predictions), \
                         "The returned predictions are less than what requested. {} vs {}".format(

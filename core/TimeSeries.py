@@ -25,7 +25,7 @@ class TimeSeries:
                 sys.exit(-2)
 
         self.forecasting_window = int(kwargs.pop("forecasting_window", 1))
-        self.minimum_observations = int(kwargs.pop("minimum_observations", 20))
+        self.minimum_observations = int(kwargs.pop("minimum_observations", 10))
 
         self.observations = __extract_values__(kwargs.pop("observations", []))
 
