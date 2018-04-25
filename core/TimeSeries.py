@@ -25,7 +25,7 @@ class TimeSeries:
                 sys.exit(-2)
 
         self.forecasting_window = int(kwargs.pop("forecasting_window", 1))
-        self.minimum_observations = int(kwargs.pop("minimum_observations", 1))
+        self.minimum_observations = int(kwargs.pop("minimum_observations", 10))
 
         self.observations = __extract_values__(kwargs.pop("observations", []))
 
@@ -73,8 +73,11 @@ class TimeSeries:
         self.__type_checks__()
         self.__length_checks__()
 
-        return [float((self.predictions[i].value - self.observations[i])/self.observations[i])
-                for i in np.arange(self.minimum_observations, len(self.observations))]
+        try:
+            return [float(1 - self.predictions[i].value / self.observations[i])
+                    for i in np.arange(self.minimum_observations, len(self.observations))]
+        except ZeroDivisionError:
+            return []
 
     def estimation_errors_area(self) -> float:
         return np.asscalar(np.sum(self.estimation_errors()))
@@ -91,18 +94,20 @@ class TimeSeries:
     def over_estimation_errors_area(self) -> float:
         return np.asscalar(np.sum(self.over_estimation_errors()))
 
-    def estimation_percentage_errors(self) -> List:
+    def absolute_percentage_errors(self) -> List:
         self.__type_checks__()
         self.__length_checks__()
 
-        return [float(np.abs(1 - self.predictions[i].value / self.observations[i]) * 100)
-                for i in np.arange(self.minimum_observations, len(self.observations))]
+        return [float(np.abs(x) * 100) for x in self.relative_estimation_errors()]
 
     def rmse(self) -> float:
         return np.sqrt(np.mean([np.power(x, 2) for x in self.estimation_errors()]))
 
     def mape(self) -> float:
-        return np.mean([np.abs(x) for x in self.relative_estimation_errors()]) * 100
+        r = self.absolute_percentage_errors()
+        if len(r) > 0:
+            return float(np.mean(r))
+        return -1
 
     def has_one_under_estimation_error(self) -> bool:
         return len(self.under_estimation_errors()) > 0

@@ -1,21 +1,27 @@
 from typing import List
 
 import numpy as np
-from pyramid.arima import auto_arima
 
 from core.AbstractForecastingModel import AbstractForecastingModel
 from core.Prediction import Prediction
+
+from statsmodels.tsa.arima_model import ARIMA
+
+p = 2
+d = 1
+q = 1
+
 
 class Arima(AbstractForecastingModel):
     @property
     def name(self) -> str:
         return "Arima"
 
-
     def predict(self, future_points: int = 1) -> List[Prediction]:
+        model = ARIMA(self.time_series_values, order=(p, d, q))
+        model_fit = model.fit(disp=0)
 
-        model = auto_arima(self.time_series_values, start_p=0, start_q=0, max_p=3, max_d=3, max_q=3, error_action="ignore", suppress_warnings=True)
+        predictions, std_errors, confidence_intervals = model_fit.forecast(steps=future_points)
 
-        predictions = model.predict(n_periods=future_points)
-
-        return [Prediction(predictions[i]) for i in np.arange(len(predictions))]
+        return [Prediction(predictions[i], std_errors[i] * np.sqrt(len(self.time_series_values)))
+                for i in np.arange(len(predictions))]

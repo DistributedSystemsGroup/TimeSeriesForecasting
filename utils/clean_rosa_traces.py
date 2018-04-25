@@ -144,6 +144,6 @@ if __name__ == '__main__':
 
     m4()
     m3("M3Year")
-    m1("MC1001","YEARLY")
+    m1("MC1001", "YEARLY")
     tcomp("Yearly")
     cif()
