@@ -37,7 +37,7 @@ class GPRegression(AbstractForecastingModel):
         train_X, train_Y, test_X = self.build_train_test()
         train_X = np.squeeze(train_X,axis=2)
 
-        k = gpflow.kernels.Linear(1)
+        k = gpflow.kernels.RBF(1)
         model = gpflow.models.GPR(train_X,train_Y,kern=k)
 
         opt = gpflow.train.ScipyOptimizer()
@@ -47,9 +47,10 @@ class GPRegression(AbstractForecastingModel):
 
             mean, var = model.predict_y(test_X)
             result = self.scaler.inverse_transform(mean)[0][0]
+            variances = self.scaler.inverse_transform(var)[0][0]
 
             predictions.append(result)
-            sigmas.append(var[0][0])
+            sigmas.append(variances)
 
             self.add_observation(result)
             _, _, test_X = self.build_train_test()
