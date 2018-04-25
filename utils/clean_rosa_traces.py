@@ -110,7 +110,7 @@ if __name__ == '__main__':
                     csv_writer.writerow({
                         "values": " ".join(str(v) for v in values),
                         "forecasting_window": NF_dict[sheet_name],
-                        "minimum_observations": len(values)
+                        "minimum_observations": len(values) - NF_dict[sheet_name]
                     })
 
     def cif():
