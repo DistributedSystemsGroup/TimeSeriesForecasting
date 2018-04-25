@@ -12,14 +12,14 @@ from core.Experiment import Experiment
 from core.TimeSeries import TimeSeries
 from forecasting_models.Arima import Arima
 from forecasting_models.AutoArima import AutoArima
-# from forecasting_models.DummyPrevious import DummyPrevious
-# from forecasting_models.ExpSmoothing import ExpSmoothing
-# from forecasting_models.GradientBoostingDirective import GradientBoostingDirective
-# from forecasting_models.GradientBoostingRecursive import GradientBoostingRecursive
-# from forecasting_models.RandomForestDirective import RandomForestDirective
-# from forecasting_models.RandomForestRecursive import RandomForestRecursive
-# from forecasting_models.SvrDirective import SvrDirective
-# from forecasting_models.SvrRecursive import SvrRecursive
+from forecasting_models.DummyPrevious import DummyPrevious
+from forecasting_models.ExpSmoothing import ExpSmoothing
+from forecasting_models.GradientBoostingDirective import GradientBoostingDirective
+from forecasting_models.GradientBoostingRecursive import GradientBoostingRecursive
+from forecasting_models.RandomForestDirective import RandomForestDirective
+from forecasting_models.RandomForestRecursive import RandomForestRecursive
+from forecasting_models.SvrDirective import SvrDirective
+from forecasting_models.SvrRecursive import SvrRecursive
 
 from utils.MultiProcessLogger import MultiProcessLogger
 from utils.utils import set_csv_field_size_limit
@@ -71,7 +71,7 @@ if __name__ == '__main__':
         logger.info("Launching {} experiments with a parallelism of {}".format(len(models_to_test), args.parallelism))
 
         with Pool(processes=args.parallelism) as p:
-            p.map(run_experiment, [Experiment(model, tss[:1]) for model in models_to_test])
+            p.map(run_experiment, [Experiment(model, tss) for model in models_to_test])
 
         logger.info("All Experiments finished.")
         multiple_process_logger.stop()
