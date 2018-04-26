@@ -68,8 +68,8 @@ def m3(sheet_name: str):
 
 
 if __name__ == '__main__':
-    dirty_traces_folder = os.path.join("..", "..", "traces", "dirty_traces", "rosa")
-    clean_traces_folder = os.path.join("..", "..", "traces")
+    dirty_traces_folder = os.path.join("..", "traces", "dirty_traces", "rosa")
+    clean_traces_folder = os.path.join("..", "traces")
 
     clean_traces_directory_path = os.path.join(clean_traces_folder)
     if not os.path.exists(clean_traces_directory_path):

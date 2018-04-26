@@ -15,15 +15,24 @@ from core.Experiment import Experiment
 from forecasting_models.DummyPrevious import DummyPrevious
 # from forecasting_models.Arima import Arima
 from forecasting_models.AutoArima import AutoArima
-# from forecasting_models.ExpSmoothing import ExpSmoothing
+from forecasting_models.ExpSmoothing import ExpSmoothing
+from forecasting_models.FBProphet import FBProphet
+from forecasting_models.GPRegression import GPRegression
 from forecasting_models.GradientBoostingDirective import GradientBoostingDirective
 from forecasting_models.GradientBoostingRecursive import GradientBoostingRecursive
+from forecasting_models.Lstm_Keras import Lstm_Keras
+from forecasting_models.NeuralNetwork import NeuralNetwork
 from forecasting_models.RandomForestDirective import RandomForestDirective
 from forecasting_models.RandomForestRecursive import RandomForestRecursive
+from forecasting_models.Revarb import Revarb
 from forecasting_models.SvrDirective import SvrDirective
 from forecasting_models.SvrRecursive import SvrRecursive
 
 from utils.utils import set_csv_field_size_limit
+
+
+MAXIMUM_OBSERVATIONS = 400
+HISTORY_SIZE = 10
 
 
 def run_experiment(_v):
@@ -44,7 +53,6 @@ if __name__ == '__main__':
     set_csv_field_size_limit()
 
     tss = []
-
     for input_trace_file in args.input_trace_files:
         input_file_path = os.path.abspath(input_trace_file)
         logger.info("Loading file: {}".format(input_file_path))
@@ -53,21 +61,35 @@ if __name__ == '__main__':
             if "values" not in reader.fieldnames:
                 RuntimeError("No columns named 'values' inside the provided csv!")
                 sys.exit(-1)
-            tss.extend([TimeSeries(observations=[float(x) for x in row.pop("values").split(" ")], **row) for row in reader])
+            for row in reader:
+                observations = [float(x) for x in row.pop("values").split(" ")]
+                if MAXIMUM_OBSERVATIONS > 0:
+                    observations = observations[:MAXIMUM_OBSERVATIONS]
+                if HISTORY_SIZE is not None and HISTORY_SIZE > 0:
+                    row["minimum_observations"] = HISTORY_SIZE
+
+                ts = TimeSeries(observations=observations, **row)
+                # discards TS that does not have enough observations
+                if len(ts.observations) <= ts.minimum_observations:
+                    logger.warning("This TS has fewer points ({}) compared with the minimum observations {}"
+                                   .format(len(ts.observations), ts.minimum_observations))
+                else:
+                    tss.append(ts)
     logger.info("Loaded {} TimeSeries".format(len(tss)))
 
     if len(tss) > 0:
         models_to_test = [
-            DummyPrevious(20),
-            # Arima(),
-            AutoArima(20),
-            # ExpSmoothing(),
-            # SvrRecursive(),
-            # SvrDirective(),
-            # RandomForestRecursive(),
-            # RandomForestDirective(),
-            # GradientBoostingRecursive(),
-            # GradientBoostingDirective(),
+            DummyPrevious(),
+            AutoArima(),
+            ExpSmoothing(),
+            SvrRecursive(),
+            RandomForestRecursive(),
+            GradientBoostingRecursive(),
+            Lstm_Keras(),
+            NeuralNetwork(),
+            GPRegression(),
+            Revarb(),
+            FBProphet()
         ]
 
         sc = SparkContext(appName="TimeSeriesForecasting")

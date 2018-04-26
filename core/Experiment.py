@@ -65,11 +65,6 @@ class Experiment:
             if logger is not None:
                 logger.debug("  Time-Series of {} observations.".format(len(ts.observations)))
 
-            if len(ts.observations) <= ts.minimum_observations:
-                if logger is not None:
-                    logger.warning("  Time-Series smaller({}) than minimum_observations({}).".format(len(ts.observations), ts.minimum_observations))
-                break
-
             i = 0
             while i < ts.minimum_observations:
                 ts.predictions.append(Prediction(ts.observations[i], 0))

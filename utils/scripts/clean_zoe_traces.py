@@ -57,9 +57,9 @@ def load_json(file_paths):
         #             print("## WARN: The application class ({}) does not have any components contraints.".format(e))
         #             break
 
-        minimum_points = 0
+        minimum_points = 999999
         for service in grouped_data[execution_id]["services"]:
-            if minimum_points < len(grouped_data[execution_id]["services"][service]):
+            if minimum_points > len(grouped_data[execution_id]["services"][service]):
                 minimum_points = len(grouped_data[execution_id]["services"][service])
         #             for (idx, component) in enumerate(CONSTRAINTS[app_class]):
         #                 if component in service:
@@ -110,8 +110,8 @@ def load_json(file_paths):
 
 
 if __name__ == '__main__':
-    dirty_traces_folder = os.path.join("..", "..", "traces", "dirty_traces", "zoe")
-    clean_traces_folder = os.path.join("..", "..", "traces")
+    dirty_traces_folder = os.path.join("..", "traces", "dirty_traces", "zoe")
+    clean_traces_folder = os.path.join("..", "traces")
 
     clean_traces_directory_path = os.path.join(clean_traces_folder)
     if not os.path.exists(clean_traces_directory_path):

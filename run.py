@@ -23,8 +23,13 @@ from forecasting_models.GPRegression import GPRegression
 from forecasting_models.Revarb import Revarb
 from forecasting_models.FBProphet import FBProphet
 
+
 from utils.MultiProcessLogger import MultiProcessLogger
 from utils.utils import set_csv_field_size_limit
+
+
+MAXIMUM_OBSERVATIONS = 400
+HISTORY_SIZE = 10
 
 
 def run_experiment(exp: Experiment):
@@ -38,30 +43,43 @@ if __name__ == '__main__':
     logger = MultiProcessLogger.logger(__name__)
 
     parser = argparse.ArgumentParser(description="Experiment different TimeSeries Forecasting Models.")
-    parser.add_argument(action='store', dest='input_trace_file', help='Input Trace File')
+    parser.add_argument(action='store', nargs='+', dest='input_trace_files', help='Input Trace File')
     parser.add_argument("-p", "--parallelism", type=int, default=1,
                         action='store', dest='parallelism', help='Parallelism')
     args = parser.parse_args()
 
-    input_file_path = os.path.abspath(args.input_trace_file)
-
     set_csv_field_size_limit()
 
-    logger.info("Loading file: {}".format(input_file_path))
     tss = []
-    with open(input_file_path) as csvfile:
-        reader = csv.DictReader(csvfile)
-        if "values" not in reader.fieldnames:
-            RuntimeError("No columns named 'values' inside the provided csv!")
-            sys.exit(-1)
-        tss.extend([TimeSeries(observations=[float(x) for x in row.pop("values").split(" ")], **row) for row in reader])
+    for input_trace_file in args.input_trace_files:
+        input_file_path = os.path.abspath(input_trace_file)
+        logger.info("Loading file: {}".format(input_file_path))
+        with open(input_file_path) as csvfile:
+            reader = csv.DictReader(csvfile)
+            if "values" not in reader.fieldnames:
+                RuntimeError("No columns named 'values' inside the provided csv!")
+                sys.exit(-1)
+            for row in reader:
+                observations = [float(x) for x in row.pop("values").split(" ")]
+                if MAXIMUM_OBSERVATIONS > 0:
+                    observations = observations[:MAXIMUM_OBSERVATIONS]
+                if HISTORY_SIZE is not None and HISTORY_SIZE > 0:
+                    row["minimum_observations"] = HISTORY_SIZE
+
+                ts = TimeSeries(observations=observations, **row)
+                # discards TS that does not have enough observations
+                if len(ts.observations) <= ts.minimum_observations:
+                    logger.warning("This TS has fewer points ({}) compared with the minimum observations {}"
+                                   .format(len(ts.observations), ts.minimum_observations))
+                else:
+                    tss.append(ts)
     logger.info("Loaded {} TimeSeries".format(len(tss)))
 
     if len(tss) > 0:
         models_to_test = [
             DummyPrevious(),
-            Arima(),
-            AutoArima(20),
+            # Arima(),
+            AutoArima(HISTORY_SIZE),
             ExpSmoothing(),
             SvrRecursive(),
             RandomForestRecursive(),
