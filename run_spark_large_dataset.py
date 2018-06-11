@@ -162,7 +162,7 @@ if __name__ == '__main__':
     tss_rdd = tss_rdd.filter(lambda line: line != header) \
         .map(parse_line_to_ts) \
         .filter(lambda x: x) \
-        .repartition(tss_rdd.context.defaultParallelism) \
+        .repartition(tss_rdd.context.defaultParallelism*2) \
         .persist(StorageLevel.MEMORY_AND_DISK)
 
     # force the execution
@@ -180,8 +180,14 @@ if __name__ == '__main__':
     for model in models_to_test:
         logger.info("Build {} models".format(model.name))
         b_model = sc.broadcast(model)
-        models_rdd = tss_rdd.map(lambda s: series_to_model(s, b_model))\
-                        .filter(lambda x: x).zipWithIndex()\
+
+        # note that zipWithIndex is a transformation, however, it triggers a job
+        # so, we cache our rdd here before calling 'zipWithIndex'
+        models_rdd_wo_idx = tss_rdd.map(lambda s: series_to_model(s, b_model))\
+                        .filter(lambda x: x)\
+                        .persist(StorageLevel.MEMORY_AND_DISK)
+                        
+        models_rdd = models_rdd_wo_idx.zipWithIndex()\
                         .persist(StorageLevel.MEMORY_AND_DISK)
 
         # we try to calculate how many entries should be collected heuristically
@@ -212,5 +218,6 @@ if __name__ == '__main__':
                         csv_writer.writeheader()
                     csv_writer.writerow(row_to_write)
         models_rdd.unpersist()
+        models_rdd_wo_idx.unpersist()
     sc.stop()
     logger.info("All Experiments finished. Results are in {}".format(experiment_directory_path))
