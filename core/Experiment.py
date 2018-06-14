@@ -85,6 +85,9 @@ class Experiment:
                         break
                 self.model.add_observation(value)
                 i += 1
+            if len(ts.predictions) >= len(ts.observations):
+                ts.predictions = ts.predictions[:len(ts.observations)]
+             
             if csv_file is not None:
                 self.__dump_result_on_csv__(csv_file, ts.to_csv())
 

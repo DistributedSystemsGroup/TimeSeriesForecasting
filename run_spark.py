@@ -16,7 +16,7 @@ from forecasting_models.DummyPrevious import DummyPrevious
 # from forecasting_models.Arima import Arima
 from forecasting_models.AutoArima import AutoArima
 from forecasting_models.ExpSmoothing import ExpSmoothing
-from forecasting_models.FBProphet import FBProphet
+# from forecasting_models.FBProphet import FBProphet
 from forecasting_models.GPRegression import GPRegression
 from forecasting_models.GradientBoostingDirective import GradientBoostingDirective
 from forecasting_models.GradientBoostingRecursive import GradientBoostingRecursive
@@ -89,7 +89,7 @@ if __name__ == '__main__':
             NeuralNetwork(),
             GPRegression(),
             Revarb(),
-            FBProphet()
+  #          FBProphet()
         ]
 
         sc = SparkContext(appName="TimeSeriesForecasting")
