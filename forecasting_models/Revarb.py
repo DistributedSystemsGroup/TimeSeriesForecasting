@@ -3,7 +3,7 @@ from typing import List
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 import GPy
-from lib.RGP import autoreg
+from libs.RGP import autoreg
 
 from core.AbstractForecastingModel import AbstractForecastingModel
 from core.Prediction import Prediction
@@ -32,7 +32,7 @@ class Revarb(AbstractForecastingModel):
     def predict(self, future_points: int = 1) -> List[Prediction]:
 
         train_X, train_Y, test_X = self.build_train_test(future_points)
-        
+
         win_out = 1
         win_in = train_window
         model = autoreg.DeepAutoreg([0,win_out], train_Y, U=train_X, U_win=win_in,

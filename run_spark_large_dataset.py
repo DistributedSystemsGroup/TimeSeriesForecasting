@@ -83,16 +83,16 @@ if __name__ == '__main__':
 
     # Models that we want to test
     models_to_test = [
-        DummyPrevious(),
-        AutoArima(),
-        ExpSmoothing(),
-        SvrRecursive(),
-        RandomForestRecursive(),
-        GradientBoostingRecursive(),
+        # DummyPrevious(),
+        # AutoArima(),
+        # ExpSmoothing(),
+        # SvrRecursive(),
+        # RandomForestRecursive(),
+        # GradientBoostingRecursive(),
         Lstm_Keras(),
-        NeuralNetwork(),
-        GPRegression(),
-        Revarb(),
+        # NeuralNetwork(),
+        # GPRegression(),
+        # Revarb(),
         # FBProphet()
     ]
 
@@ -114,16 +114,6 @@ if __name__ == '__main__':
             }
         )
 
-        if HISTORY_SIZE is not None and HISTORY_SIZE > 0:
-            ts.minimum_observations = HISTORY_SIZE
-
-        if MAXIMUM_OBSERVATIONS > 0:
-            ts.observations = ts.observations[:MAXIMUM_OBSERVATIONS]
-
-        if len(ts.observations) <= ts.minimum_observations:
-            logger.warning("This TS has fewer points ({}) compared with the minimum observations {}"
-                            .format(len(ts.observations), ts.minimum_observations))
-            return None
         return ts
 
     # for each timeseries, train it with multiple models
@@ -161,7 +151,7 @@ if __name__ == '__main__':
     header = tss_rdd.first()
     tss_rdd = tss_rdd.filter(lambda line: line != header) \
         .map(parse_line_to_ts) \
-        .filter(lambda x: x) \
+        .filter(lambda x: x != None) \
         .repartition(tss_rdd.context.defaultParallelism*2) \
         .persist(StorageLevel.MEMORY_AND_DISK)
 
